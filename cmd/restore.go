@@ -27,9 +27,10 @@ var restoreCmd = &cobra.Command{
 }
 
 var restoreDashboardCmd = &cobra.Command{
-	Use:          "dashboard",
-	Short:        "Restore a dashboard",
-	SilenceUsage: true,
+	Use:           "dashboard",
+	Short:         "Restore a dashboard",
+	SilenceUsage:  true,
+	SilenceErrors: false,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error: restoring a dashboard not yet implemented")
 	},

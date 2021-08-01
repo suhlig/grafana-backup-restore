@@ -31,19 +31,32 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	// TODO Use Viper instead
+	var found bool
+	ApiKey, found = os.LookupEnv("GRAFANA_API_TOKEN")
+
+	if !found {
+		fmt.Fprintf(os.Stderr, "Error: GRAFANA_API_TOKEN variable not set\n")
+		os.Exit(1)
+	}
+
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
 var Verbose bool
+var ApiKey string
+var ApiURL string
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
+	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "V", false, "verbose output")
+	rootCmd.PersistentFlags().StringVarP(&ApiURL, "url", "U", "", "Grafana API URL (required)")
+	rootCmd.MarkPersistentFlagRequired("url")
 
 	rootCmd.AddCommand(backupCmd)
-	backupCmd.AddCommand(backupDashboardCmd)
+	backupCmd.AddCommand(backupDashboardsCmd)
 	backupCmd.AddCommand(backupDataSourceCmd)
 
 	rootCmd.AddCommand(restoreCmd)

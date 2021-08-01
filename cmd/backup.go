@@ -1,4 +1,6 @@
 /*
+Copyright 2016 Alexander I.Grafov <grafov@gmail.com>
+Copyright 2016-2019 The Grafana SDK authors
 Copyright © 2021 Steffen Uhlig
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +18,12 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"io/ioutil"
+	"os"
 
+	grafana "github.com/grafana-tools/sdk"
 	"github.com/spf13/cobra"
 )
 
@@ -26,12 +32,60 @@ var backupCmd = &cobra.Command{
 	Short: "Backup Grafana items",
 }
 
-var backupDashboardCmd = &cobra.Command{
-	Use:          "dashboard",
-	Short:        "Backup a dashboard",
-	SilenceUsage: true,
+var backupDashboardsCmd = &cobra.Command{
+	Use:           "dashboards",
+	Short:         "Backup all dashboards",
+	SilenceUsage:  true,
+	SilenceErrors: false,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return fmt.Errorf("Error: backing up a dashboard not yet implemented")
+		var (
+			boardLinks []grafana.FoundBoard
+			rawBoard   []byte
+			meta       grafana.BoardProperties
+			err        error
+		)
+
+		c, err := grafana.NewClient(ApiURL, ApiKey, grafana.DefaultHTTPClient)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to create a client: %s\n", err)
+			os.Exit(1)
+		}
+
+		ctx := context.Background()
+
+		if boardLinks, err = c.SearchDashboards(ctx, "", false); err != nil {
+			return err
+		}
+
+		for _, link := range boardLinks {
+			rawBoard, meta, err = c.GetRawDashboardByUID(ctx, link.UID)
+
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %s for %s\n", err, link.URI)
+				continue
+			}
+
+			err = os.MkdirAll(meta.FolderTitle, os.FileMode(int(0700)))
+
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error creating backup folder %s: %s\n", meta.FolderTitle, err)
+			}
+
+			fileName := fmt.Sprintf("%s/%s.json", meta.FolderTitle, meta.Slug)
+
+			if Verbose {
+				fmt.Fprintf(os.Stderr, "Writing dashboard '%s/%s' to %s\n", link.FolderTitle, link.Title, fileName)
+			}
+
+			err = ioutil.WriteFile(fileName, rawBoard, os.FileMode(int(0600)))
+
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing %s: %s\n", fileName, err)
+			}
+		}
+
+		return nil
 	},
 }
 
