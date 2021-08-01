@@ -23,7 +23,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:           "grafana-backup-restore [backup | restore]",
+	Use:           "grafana-backup-restore",
 	Short:         "Simple backup and restore of Grafana",
 	SilenceErrors: true,
 }
@@ -52,14 +52,16 @@ var ApiURL string
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "V", false, "verbose output")
-	rootCmd.PersistentFlags().StringVarP(&ApiURL, "url", "U", "", "Grafana API URL (required)")
-	rootCmd.MarkPersistentFlagRequired("url")
 
 	rootCmd.AddCommand(backupCmd)
 	backupCmd.AddCommand(backupDashboardsCmd)
 	backupCmd.AddCommand(backupDataSourceCmd)
+	backupCmd.PersistentFlags().StringVarP(&ApiURL, "url", "U", "", "Grafana API URL (required)")
+	backupCmd.MarkPersistentFlagRequired("url")
 
 	rootCmd.AddCommand(restoreCmd)
 	restoreCmd.AddCommand(restoreDashboardCmd)
 	restoreCmd.AddCommand(restoreDataSourceCmd)
+	restoreCmd.PersistentFlags().StringVarP(&ApiURL, "url", "U", "", "Grafana API URL (required)")
+	restoreCmd.MarkPersistentFlagRequired("url")
 }
