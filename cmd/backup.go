@@ -46,21 +46,20 @@ var backupDashboards = &cobra.Command{
 			err        error
 		)
 
-		c, err := grafana.NewClient(ApiURL, ApiKey, grafana.DefaultHTTPClient)
+		client, err := grafana.NewClient(ApiURL, ApiKey, grafana.DefaultHTTPClient)
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to create a client: %s\n", err)
-			os.Exit(1)
+			return err
 		}
 
 		ctx := context.Background()
 
-		if dashboards, err = c.SearchDashboards(ctx, "", false); err != nil {
+		if dashboards, err = client.SearchDashboards(ctx, "", false); err != nil {
 			return err
 		}
 
 		for _, dashboard := range dashboards {
-			data, meta, err = c.GetRawDashboardByUID(ctx, dashboard.UID)
+			data, meta, err = client.GetRawDashboardByUID(ctx, dashboard.UID)
 
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %s for %s\n", err, dashboard.URI)
