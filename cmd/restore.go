@@ -24,91 +24,73 @@ import (
 	"path/filepath"
 
 	grafana "github.com/grafana-tools/sdk"
-	"github.com/spf13/cobra"
 )
 
-var restore = &cobra.Command{
-	Use:   "restore",
-	Short: "Restore Grafana items",
+func RestoreDataSources() error {
+	return fmt.Errorf("Error: restoring all datasources not yet implemented")
 }
 
-var restoreDashboards = &cobra.Command{
-	Use:           "dashboards",
-	Short:         "Restore all dashboards",
-	SilenceUsage:  true,
-	SilenceErrors: false,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		absTarget, err := filepath.Abs(SourceDirectory)
+func RestoreDashboards() error {
+	absTarget, err := filepath.Abs(SourceDirectory)
 
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
+	}
 
-		client, err := grafana.NewClient(ApiURL, ApiKey, grafana.DefaultHTTPClient)
+	client, err := grafana.NewClient(ApiURL, ApiKey, grafana.DefaultHTTPClient)
 
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
+	}
 
-		err = filepath.Walk(absTarget, func(candidate string, info os.FileInfo, err error) error {
-			if info.IsDir() {
-				if Verbose {
-					fmt.Fprintf(os.Stderr, "Skipping directory %s\n", candidate)
-				}
-
-				return nil
-			}
-
-			if filepath.Ext(candidate) != ".json" {
-				if Verbose {
-					fmt.Fprintf(os.Stderr, "Skipping non-JSON file %s\n", candidate)
-				}
-
-				return nil
-			}
-
-			relative := path.Dir(candidate[len(absTarget)+1:])
-
+	err = filepath.Walk(absTarget, func(candidate string, info os.FileInfo, err error) error {
+		if info.IsDir() {
 			if Verbose {
-				fmt.Fprintf(os.Stderr, "Importing %s into folder %s... ", candidate, relative)
-			}
-
-			rawBoard, err := ioutil.ReadFile(candidate)
-
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: Skipping %s because it could not be read: %s\n", candidate, err)
-				return nil
-			}
-
-			ctx := context.Background()
-			result, err := client.SetRawDashboard(ctx, rawBoard)
-
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: Skipping import of %s: %s\n", candidate, err)
-				return nil
-			}
-
-			if Verbose {
-				fmt.Fprintln(os.Stderr, *result.Status)
+				fmt.Fprintf(os.Stderr, "Skipping directory %s\n", candidate)
 			}
 
 			return nil
-		})
+		}
+
+		if filepath.Ext(candidate) != ".json" {
+			if Verbose {
+				fmt.Fprintf(os.Stderr, "Skipping non-JSON file %s\n", candidate)
+			}
+
+			return nil
+		}
+
+		relative := path.Dir(candidate[len(absTarget)+1:])
+
+		if Verbose {
+			fmt.Fprintf(os.Stderr, "Importing %s into folder %s... ", candidate, relative)
+		}
+
+		rawBoard, err := ioutil.ReadFile(candidate)
 
 		if err != nil {
-			return err
+			fmt.Fprintf(os.Stderr, "Warning: Skipping %s because it could not be read: %s\n", candidate, err)
+			return nil
+		}
+
+		ctx := context.Background()
+		result, err := client.SetRawDashboard(ctx, rawBoard)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Skipping import of %s: %s\n", candidate, err)
+			return nil
+		}
+
+		if Verbose {
+			fmt.Fprintln(os.Stderr, *result.Status)
 		}
 
 		return nil
-	},
-}
+	})
 
-var restoreDataSources = &cobra.Command{
-	Use:           "datasources",
-	Short:         "Restore all datasources",
-	SilenceUsage:  true,
-	SilenceErrors: false,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return fmt.Errorf("Error: restoring all datasources not yet implemented")
-	},
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

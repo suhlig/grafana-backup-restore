@@ -22,11 +22,69 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var root = &cobra.Command{
-	Use:           "grafana-backup-restore",
-	Short:         "Simple backup and restore of Grafana",
-	SilenceErrors: true,
-}
+var (
+	Verbose         bool
+	ApiKey          string
+	ApiURL          string
+	SourceDirectory string
+	TargetDirectory string
+
+	root = &cobra.Command{
+		Use:           "grafana-backup-restore",
+		Short:         "Simple backup and restore of Grafana",
+		SilenceErrors: true,
+	}
+
+	backup = &cobra.Command{
+		Use:   "backup",
+		Short: "Backup Grafana items",
+	}
+
+	backupDashboards = &cobra.Command{
+		Use:           "dashboards",
+		Short:         "Backup all dashboards",
+		SilenceUsage:  true,
+		SilenceErrors: false,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return BackupDashboards()
+		},
+	}
+
+	backupDataSources = &cobra.Command{
+		Use:           "datasources",
+		Short:         "Backup all datasources",
+		SilenceUsage:  true,
+		SilenceErrors: false,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return BackupDataSources()
+		},
+	}
+
+	restore = &cobra.Command{
+		Use:   "restore",
+		Short: "Restore Grafana items",
+	}
+
+	restoreDashboards = &cobra.Command{
+		Use:           "dashboards",
+		Short:         "Restore all dashboards",
+		SilenceUsage:  true,
+		SilenceErrors: false,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return RestoreDashboards()
+		},
+	}
+
+	restoreDataSources = &cobra.Command{
+		Use:           "datasources",
+		Short:         "Restore all datasources",
+		SilenceUsage:  true,
+		SilenceErrors: false,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return RestoreDataSources()
+		},
+	}
+)
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
@@ -45,14 +103,6 @@ func Execute() {
 		os.Exit(1)
 	}
 }
-
-var (
-	Verbose         bool
-	ApiKey          string
-	ApiURL          string
-	SourceDirectory string
-	TargetDirectory string
-)
 
 func init() {
 	root.PersistentFlags().BoolVarP(&Verbose, "verbose", "V", false, "verbose output")
