@@ -10,6 +10,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/suhlig/grafana-backup-restore/cmd"
 )
 
 var _ = Describe("Backup and restore dashboards", func() {
@@ -32,6 +33,21 @@ var _ = Describe("Backup and restore dashboards", func() {
 
 		It("has no dashboards", func() {
 			Expect(dashboards).To(HaveLen(0))
+		})
+	})
+
+	Context("importing dashboards", func() {
+		JustBeforeEach(func() {
+			err = cmd.RestoreDashboards("fixtures/dashboards", "http://localhost:3000", apiKey)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("has four dashboards", func() {
+			Eventually(func() int {
+				dashboards, err = getDashboards(apiKey)
+				Expect(err).ToNot(HaveOccurred())
+				return len(dashboards)
+			}).Should(Equal(4))
 		})
 	})
 })
