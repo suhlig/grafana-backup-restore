@@ -21,26 +21,27 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var restoreCmd = &cobra.Command{
+var restore = &cobra.Command{
 	Use:   "restore",
 	Short: "Restore Grafana items",
 }
 
-var restoreDashboardsCmd = &cobra.Command{
+var restoreDashboards = &cobra.Command{
 	Use:           "dashboards",
-	Short:         "Restore a dashboard",
+	Short:         "Restore all dashboards",
 	SilenceUsage:  true,
 	SilenceErrors: false,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return fmt.Errorf("Error: restoring a dashboard not yet implemented")
+		return fmt.Errorf("Error: restoring all dashboards not yet implemented")
 	},
 }
 
-var restoreDataSourcesCmd = &cobra.Command{
-	Use:          "datasources",
-	Short:        "Restore a datasource",
-	SilenceUsage: true,
+var restoreDataSources = &cobra.Command{
+	Use:           "datasources",
+	Short:         "Restore all datasources",
+	SilenceUsage:  true,
+	SilenceErrors: false,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return fmt.Errorf("Error: restoring a datasource not yet implemented")
+		return fmt.Errorf("Error: restoring all datasources not yet implemented")
 	},
 }

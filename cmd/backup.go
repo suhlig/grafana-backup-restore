@@ -27,20 +27,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var backupCmd = &cobra.Command{
+var backup = &cobra.Command{
 	Use:   "backup",
 	Short: "Backup Grafana items",
 }
 
-var backupDashboardsCmd = &cobra.Command{
+var backupDashboards = &cobra.Command{
 	Use:           "dashboards",
 	Short:         "Backup all dashboards",
 	SilenceUsage:  true,
 	SilenceErrors: false,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var (
-			boardLinks []grafana.FoundBoard
-			rawBoard   []byte
+			dashboards []grafana.FoundBoard
+			data       []byte
 			meta       grafana.BoardProperties
 			err        error
 		)
@@ -54,31 +54,41 @@ var backupDashboardsCmd = &cobra.Command{
 
 		ctx := context.Background()
 
-		if boardLinks, err = c.SearchDashboards(ctx, "", false); err != nil {
+		if dashboards, err = c.SearchDashboards(ctx, "", false); err != nil {
 			return err
 		}
 
-		for _, link := range boardLinks {
-			rawBoard, meta, err = c.GetRawDashboardByUID(ctx, link.UID)
+		for _, dashboard := range dashboards {
+			data, meta, err = c.GetRawDashboardByUID(ctx, dashboard.UID)
 
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error: %s for %s\n", err, link.URI)
+				fmt.Fprintf(os.Stderr, "Error: %s for %s\n", err, dashboard.URI)
 				continue
 			}
 
-			err = os.MkdirAll(meta.FolderTitle, os.FileMode(int(0700)))
+			var directory, displayPath string
+
+			if dashboard.FolderTitle == "" {
+				directory = meta.FolderTitle
+				displayPath = fmt.Sprintf("%s/%s", meta.FolderTitle, dashboard.Title)
+			} else {
+				directory = dashboard.FolderTitle
+				displayPath = fmt.Sprintf("%s/%s", dashboard.FolderTitle, dashboard.Title)
+			}
+
+			err = os.MkdirAll(directory, os.FileMode(int(0700)))
 
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error creating backup folder %s: %s\n", meta.FolderTitle, err)
+				fmt.Fprintf(os.Stderr, "Error creating backup folder %s: %s\n", directory, err)
 			}
 
-			fileName := fmt.Sprintf("%s/%s.json", meta.FolderTitle, meta.Slug)
+			fileName := fmt.Sprintf("%s/%s.json", directory, meta.Slug)
 
 			if Verbose {
-				fmt.Fprintf(os.Stderr, "Writing dashboard '%s/%s' to %s\n", link.FolderTitle, link.Title, fileName)
+				fmt.Fprintf(os.Stderr, "Writing dashboard '%s' to %s\n", displayPath, fileName)
 			}
 
-			err = ioutil.WriteFile(fileName, rawBoard, os.FileMode(int(0600)))
+			err = ioutil.WriteFile(fileName, data, os.FileMode(int(0600)))
 
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error writing %s: %s\n", fileName, err)
@@ -89,11 +99,12 @@ var backupDashboardsCmd = &cobra.Command{
 	},
 }
 
-var backupDataSourcesCmd = &cobra.Command{
-	Use:          "datasource",
-	Short:        "Backup a datasource",
-	SilenceUsage: true,
+var backupDataSources = &cobra.Command{
+	Use:           "datasources",
+	Short:         "Backup all datasources",
+	SilenceUsage:  true,
+	SilenceErrors: false,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return fmt.Errorf("Error: backing up a datasource not yet implemented")
+		return fmt.Errorf("Error: backing up all datasources not yet implemented")
 	},
 }

@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
+var root = &cobra.Command{
 	Use:           "grafana-backup-restore",
 	Short:         "Simple backup and restore of Grafana",
 	SilenceErrors: true,
@@ -40,7 +40,7 @@ func Execute() {
 		os.Exit(1)
 	}
 
-	if err := rootCmd.Execute(); err != nil {
+	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
@@ -51,17 +51,17 @@ var ApiKey string
 var ApiURL string
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "V", false, "verbose output")
+	root.PersistentFlags().BoolVarP(&Verbose, "verbose", "V", false, "verbose output")
 
-	rootCmd.AddCommand(backupCmd)
-	backupCmd.AddCommand(backupDashboardsCmd)
-	backupCmd.AddCommand(backupDataSourceCmd)
-	backupCmd.PersistentFlags().StringVarP(&ApiURL, "url", "U", "", "Grafana API URL (required)")
-	backupCmd.MarkPersistentFlagRequired("url")
+	root.AddCommand(backup)
+	backup.AddCommand(backupDashboards)
+	backup.AddCommand(backupDataSources)
+	backup.PersistentFlags().StringVarP(&ApiURL, "url", "U", "", "Grafana API URL (required)")
+	backup.MarkPersistentFlagRequired("url")
 
-	rootCmd.AddCommand(restoreCmd)
-	restoreCmd.AddCommand(restoreDashboardCmd)
-	restoreCmd.AddCommand(restoreDataSourceCmd)
-	restoreCmd.PersistentFlags().StringVarP(&ApiURL, "url", "U", "", "Grafana API URL (required)")
-	restoreCmd.MarkPersistentFlagRequired("url")
+	root.AddCommand(restore)
+	restore.AddCommand(restoreDashboards)
+	restore.AddCommand(restoreDataSources)
+	restore.PersistentFlags().StringVarP(&ApiURL, "url", "U", "", "Grafana API URL (required)")
+	restore.MarkPersistentFlagRequired("url")
 }
