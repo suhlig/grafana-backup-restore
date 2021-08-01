@@ -1,0 +1,17 @@
+jobs:
+- name: acceptance-tests
+  plan:
+  - get: acceptance-test-source
+    trigger: true
+  - task: run-acceptance-tests
+    file: acceptance-test-source/ci/tasks/acceptance-test.yml
+    input_mapping: { source: acceptance-test-source }
+
+resources:
+- name: acceptance-test-source
+  type: git
+  icon: github-circle
+  source:
+    uri: git@github.com:suhlig/grafana-backup-restore.git
+    private_key: ((github.ssh_key))
+    path: acceptance-tests/*
