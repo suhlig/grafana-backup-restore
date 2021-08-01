@@ -46,7 +46,7 @@ var (
 		SilenceUsage:  true,
 		SilenceErrors: false,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return BackupDashboards()
+			return BackupDashboards(TargetDirectory, ApiURL, ApiKey)
 		},
 	}
 
@@ -56,7 +56,7 @@ var (
 		SilenceUsage:  true,
 		SilenceErrors: false,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return BackupDataSources()
+			return BackupDataSources(TargetDirectory, ApiURL, ApiKey)
 		},
 	}
 
@@ -71,7 +71,7 @@ var (
 		SilenceUsage:  true,
 		SilenceErrors: false,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return RestoreDashboards()
+			return RestoreDashboards(SourceDirectory, ApiURL, ApiKey)
 		},
 	}
 
@@ -81,7 +81,7 @@ var (
 		SilenceUsage:  true,
 		SilenceErrors: false,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return RestoreDataSources()
+			return RestoreDataSources(SourceDirectory, ApiURL, ApiKey)
 		},
 	}
 )

@@ -27,11 +27,11 @@ import (
 	grafana "github.com/grafana-tools/sdk"
 )
 
-func BackupDataSources() error {
+func BackupDataSources(targetDirectory, apiURL, apiKey string) error {
 	return fmt.Errorf("Error: backing up all datasources not yet implemented")
 }
 
-func BackupDashboards() error {
+func BackupDashboards(targetDirectory, apiURL, apiKey string) error {
 	var (
 		dashboards []grafana.FoundBoard
 		data       []byte
@@ -39,7 +39,7 @@ func BackupDashboards() error {
 		err        error
 	)
 
-	client, err := grafana.NewClient(ApiURL, ApiKey, grafana.DefaultHTTPClient)
+	client, err := grafana.NewClient(apiURL, apiKey, grafana.DefaultHTTPClient)
 
 	if err != nil {
 		return err
@@ -62,10 +62,10 @@ func BackupDashboards() error {
 		var directory, displayPath string
 
 		if dashboard.FolderTitle == "" {
-			directory = path.Join(TargetDirectory, meta.FolderTitle)
+			directory = path.Join(targetDirectory, meta.FolderTitle)
 			displayPath = fmt.Sprintf("%s/%s", meta.FolderTitle, dashboard.Title)
 		} else {
-			directory = path.Join(TargetDirectory, dashboard.FolderTitle)
+			directory = path.Join(targetDirectory, dashboard.FolderTitle)
 			displayPath = fmt.Sprintf("%s/%s", dashboard.FolderTitle, dashboard.Title)
 		}
 

@@ -26,24 +26,28 @@ import (
 	grafana "github.com/grafana-tools/sdk"
 )
 
-func RestoreDataSources() error {
+func RestoreDataSources(sourceDirectory, apiURL, apiKey string) error {
 	return fmt.Errorf("Error: restoring all datasources not yet implemented")
 }
 
-func RestoreDashboards() error {
-	absTarget, err := filepath.Abs(SourceDirectory)
+func RestoreDashboards(sourceDirectory, apiURL, apiKey string) error {
+	absTarget, err := filepath.Abs(sourceDirectory)
 
 	if err != nil {
 		return err
 	}
 
-	client, err := grafana.NewClient(ApiURL, ApiKey, grafana.DefaultHTTPClient)
+	client, err := grafana.NewClient(apiURL, apiKey, grafana.DefaultHTTPClient)
 
 	if err != nil {
 		return err
 	}
 
 	err = filepath.Walk(absTarget, func(candidate string, info os.FileInfo, err error) error {
+		if info == nil {
+			return fmt.Errorf("no info about %s", absTarget)
+		}
+
 		if info.IsDir() {
 			if Verbose {
 				fmt.Fprintf(os.Stderr, "Skipping directory %s\n", candidate)
