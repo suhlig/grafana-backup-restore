@@ -1,14 +1,14 @@
 jobs:
 - name: build-acceptance-test-image
   plan:
-  - get: acceptance-test-source
+  - get: acceptance-test-image-source
     trigger: true
   - put: acceptance-test-image
     params:
-      build: acceptance-test-source/ci/images/acceptance-test
+      build: acceptance-test-image-source/ci/images/acceptance-test
 
 resources:
-- name: acceptance-test-source
+- name: acceptance-test-image-source
   type: git
   icon: github-circle
   source:
