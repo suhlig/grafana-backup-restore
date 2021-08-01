@@ -2,7 +2,15 @@ FROM ubuntu
 
 # Grafana
 RUN  apt-get update \
-  && apt-get install --yes --quiet --no-install-recommends ca-certificates curl gnupg gcc \
+  && apt-get install --yes --quiet --no-install-recommends \
+       ca-certificates \
+       curl \
+       g++ \
+       gcc \
+       gnupg \
+       libc6-dev \
+       make \
+       pkg-config \
   && echo deb https://packages.grafana.com/oss/deb stable main > /etc/apt/sources.list.d/grafana.list \
   && curl https://packages.grafana.com/gpg.key | apt-key add - \
   && apt-get update \
