@@ -14,7 +14,7 @@ resources:
   source:
     uri: git@github.com:suhlig/grafana-backup-restore.git
     private_key: ((github.ssh_key))
-    path: ci/images/acceptance-test/Dockerfile
+    paths: [ ci/images/acceptance-test/Dockerfile ]
 
 - name: acceptance-test-image
   icon: docker

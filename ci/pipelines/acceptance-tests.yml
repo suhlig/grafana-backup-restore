@@ -14,4 +14,4 @@ resources:
   source:
     uri: git@github.com:suhlig/grafana-backup-restore.git
     private_key: ((github.ssh_key))
-    path: acceptance-tests/*
+    paths: [ acceptance-tests/* ]
