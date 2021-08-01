@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+CONCOURSE_TARGET=uh
+PIPELINE_NAME="grafana-backup-restore"
+SCRIPT_PATH=$(dirname "$(realpath -s $0)")
+
+main(){
+  generate-pipeline
+  set-pipeline
+  unpause
+}
+
+generate-pipeline() {
+  spruce merge "${SCRIPT_PATH}"/pipelines/*.yml > "${SCRIPT_PATH}/pipeline.yml"
+}
+
+set-pipeline(){
+  fly \
+    set-pipeline \
+    --target "$CONCOURSE_TARGET" \
+    --pipeline="$PIPELINE_NAME" \
+    --config="${SCRIPT_PATH}/pipeline.yml" \
+    --load-vars-from="${SCRIPT_PATH}/private-config.yml"
+}
+
+unpause() {
+  fly \
+    unpause-pipeline \
+      --target "$CONCOURSE_TARGET" \
+      --pipeline="$PIPELINE_NAME"
+}
+
+main "${PWD}"

@@ -1,0 +1,25 @@
+jobs:
+- name: build-acceptance-test-image
+  plan:
+  - get: acceptance-test-source
+    trigger: true
+  - put: acceptance-test-image
+    params:
+      build: acceptance-test-source/ci/images/acceptance-test
+
+resources:
+- name: acceptance-test-source
+  type: git
+  icon: github-circle
+  source:
+    uri: git@github.com:suhlig/grafana-backup-restore.git
+    private_key: ((github.ssh_key))
+    path: ci/images/acceptance-test/Dockerfile
+
+- name: acceptance-test-image
+  icon: docker
+  type: docker-image
+  source:
+    username: ((dockerhub.username))
+    password: ((dockerhub.password))
+    repository: suhlig/grafana-backup-restore-acceptance-test
