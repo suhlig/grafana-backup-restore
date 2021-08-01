@@ -89,7 +89,7 @@ var backupDashboardsCmd = &cobra.Command{
 	},
 }
 
-var backupDataSourceCmd = &cobra.Command{
+var backupDataSourcesCmd = &cobra.Command{
 	Use:          "datasource",
 	Short:        "Backup a datasource",
 	SilenceUsage: true,

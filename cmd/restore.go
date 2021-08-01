@@ -26,8 +26,8 @@ var restoreCmd = &cobra.Command{
 	Short: "Restore Grafana items",
 }
 
-var restoreDashboardCmd = &cobra.Command{
-	Use:           "dashboard",
+var restoreDashboardsCmd = &cobra.Command{
+	Use:           "dashboards",
 	Short:         "Restore a dashboard",
 	SilenceUsage:  true,
 	SilenceErrors: false,
@@ -36,8 +36,8 @@ var restoreDashboardCmd = &cobra.Command{
 	},
 }
 
-var restoreDataSourceCmd = &cobra.Command{
-	Use:          "datasource",
+var restoreDataSourcesCmd = &cobra.Command{
+	Use:          "datasources",
 	Short:        "Restore a datasource",
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
