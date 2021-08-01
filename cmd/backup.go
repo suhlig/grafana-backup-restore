@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 
 	grafana "github.com/grafana-tools/sdk"
 	"github.com/spf13/cobra"
@@ -69,10 +70,10 @@ var backupDashboards = &cobra.Command{
 			var directory, displayPath string
 
 			if dashboard.FolderTitle == "" {
-				directory = meta.FolderTitle
+				directory = path.Join(TargetDirectory, meta.FolderTitle)
 				displayPath = fmt.Sprintf("%s/%s", meta.FolderTitle, dashboard.Title)
 			} else {
-				directory = dashboard.FolderTitle
+				directory = path.Join(TargetDirectory, dashboard.FolderTitle)
 				displayPath = fmt.Sprintf("%s/%s", dashboard.FolderTitle, dashboard.Title)
 			}
 

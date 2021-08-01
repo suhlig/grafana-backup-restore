@@ -46,9 +46,13 @@ func Execute() {
 	}
 }
 
-var Verbose bool
-var ApiKey string
-var ApiURL string
+var (
+	Verbose         bool
+	ApiKey          string
+	ApiURL          string
+	SourceDirectory string
+	TargetDirectory string
+)
 
 func init() {
 	root.PersistentFlags().BoolVarP(&Verbose, "verbose", "V", false, "verbose output")
@@ -58,10 +62,12 @@ func init() {
 	backup.AddCommand(backupDataSources)
 	backup.PersistentFlags().StringVarP(&ApiURL, "url", "U", "", "Grafana API URL (required)")
 	backup.MarkPersistentFlagRequired("url")
+	backup.PersistentFlags().StringVarP(&TargetDirectory, "target", "T", "", "Target directory to write to. Defaults to the current working directory.")
 
 	root.AddCommand(restore)
 	restore.AddCommand(restoreDashboards)
 	restore.AddCommand(restoreDataSources)
 	restore.PersistentFlags().StringVarP(&ApiURL, "url", "U", "", "Grafana API URL (required)")
 	restore.MarkPersistentFlagRequired("url")
+	restore.PersistentFlags().StringVarP(&SourceDirectory, "source", "S", "", "Source directory to read from. Defaults to the current working directory.")
 }
