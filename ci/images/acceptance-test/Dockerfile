@@ -1,3 +1,6 @@
+ARG golang_version
+ARG golang_download_sha256
+
 FROM ubuntu
 
 # Grafana
@@ -19,9 +22,9 @@ RUN  apt-get update \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Go
-ENV GOLANG_VERSION 1.16.6
+ENV GOLANG_VERSION=$golang_version
 ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
-ENV GOLANG_DOWNLOAD_SHA256 be333ef18b3016e9d7cb7b1ff1fdb0cac800ca0be4cf2290fe613b3d069dfe0d
+ENV GOLANG_DOWNLOAD_SHA256=${golang_download_sha256}
 RUN    curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
     && echo "$GOLANG_DOWNLOAD_SHA256 golang.tar.gz" | sha256sum -c - \
     && tar -C /usr/local -xzf golang.tar.gz \

@@ -1,11 +1,26 @@
 jobs:
 - name: build-acceptance-test-image
   plan:
-  - get: acceptance-test-image-source
-    trigger: true
+  - in_parallel:
+    # Idea: we trigger a new build whenever the one of the following dependencies changes.
+    # The dockerfile will then use the latest (stable) version of _each_ dependency (except go).
+    - get: acceptance-test-image-source
+      trigger: true
+    - get: ubuntu-image
+      trigger: true
+    - get: grafana-release
+      trigger: true
+    - get: ginkgo-release
+      trigger: true
+    - get: gomega-release
+      trigger: true
   - put: acceptance-test-image
     params:
       build: acceptance-test-image-source/ci/images/acceptance-test
+      build_args:
+        # there is no good way to automatically fetch the version _and_ the sha, so we hard-code it here
+        golang_version: 1.16.6
+        golang_download_sha256: be333ef18b3016e9d7cb7b1ff1fdb0cac800ca0be4cf2290fe613b3d069dfe0d
 
 resources:
 - name: acceptance-test-image-source
@@ -17,9 +32,41 @@ resources:
     paths: [ ci/images/acceptance-test/Dockerfile ]
 
 - name: acceptance-test-image
-  icon: docker
   type: docker-image
-  source:
+  icon: docker
+  source: &dockerhub
     username: ((dockerhub.username))
     password: ((dockerhub.password))
     repository: suhlig/grafana-backup-restore-acceptance-test
+
+- name: ubuntu-image
+  type: docker-image
+  icon: docker
+  source:
+    <<: *dockerhub
+    repository: ubuntu
+    tag: latest
+
+- name: grafana-release
+  type: github-release
+  icon: github
+  source:
+    owner: grafana
+    repository: grafana
+    access_token: ((github.token))
+
+- name: gomega-release
+  type: github-release
+  icon: github
+  source:
+    owner: onsi
+    repository: gomega
+    access_token: ((github.token))
+
+- name: ginkgo-release
+  type: github-release
+  icon: github
+  source:
+    owner: onsi
+    repository: ginkgo
+    access_token: ((github.token))
