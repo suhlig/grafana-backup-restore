@@ -64,13 +64,13 @@ func RestoreDashboards(sourceDirectory, apiURL, apiKey string) error {
 			return nil
 		}
 
-		relative := path.Dir(candidate[len(absTarget)+1:])
+		folderName := path.Dir(candidate[len(absTarget)+1:])
 
 		if Verbose {
-			fmt.Fprintf(os.Stderr, "Importing %s into folder %s... ", candidate, relative)
+			fmt.Fprintf(os.Stderr, "Importing %s into folder %s... ", candidate, folderName)
 		}
 
-		rawBoard, err := ioutil.ReadFile(candidate)
+		boardBytes, err := ioutil.ReadFile(candidate)
 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: Skipping %s because it could not be read: %s\n", candidate, err)
@@ -78,7 +78,16 @@ func RestoreDashboards(sourceDirectory, apiURL, apiKey string) error {
 		}
 
 		ctx := context.Background()
-		result, err := client.SetRawDashboard(ctx, rawBoard)
+
+		folder, err := getOrCreateFolder(ctx, client, folderName)
+
+		result, err := client.SetRawDashboardWithParam(ctx, grafana.RawBoardRequest{
+			Dashboard: boardBytes,
+			Parameters: grafana.SetDashboardParams{
+				FolderID:  folder.ID,
+				Overwrite: true,
+			},
+		})
 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: Skipping import of %s: %s\n", candidate, err)
@@ -97,4 +106,32 @@ func RestoreDashboards(sourceDirectory, apiURL, apiKey string) error {
 	}
 
 	return nil
+}
+
+func getOrCreateFolder(ctx context.Context, client *grafana.Client, folderName string) (*grafana.Folder, error) {
+	if folderName == "General" {
+		// https://grafana.com/docs/grafana/latest/http_api/folder/#a-note-about-the-general-folder
+		return &grafana.Folder{Title: "General", ID: grafana.DefaultFolderId}, nil
+	}
+
+	folders, err := client.GetAllFolders(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, f := range folders {
+		if f.Title == folderName {
+			return &f, nil
+		}
+	}
+
+	// not found; need to create it
+	f, err := client.CreateFolder(ctx, grafana.Folder{Title: folderName})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &f, nil
 }

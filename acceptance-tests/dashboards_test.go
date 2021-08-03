@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -48,6 +50,60 @@ var _ = Describe("Backup and restore dashboards", func() {
 				Expect(err).ToNot(HaveOccurred())
 				return len(dashboards)
 			}).Should(Equal(4))
+		})
+
+		Context("exporting them again", func() {
+			var targetDirectory string
+			BeforeEach(func() {
+				targetDirectory, err = ioutil.TempDir("", "grafana-backup")
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			JustBeforeEach(func() {
+				err = cmd.BackupDashboards(targetDirectory, "http://localhost:3000", apiKey)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("has four dashboard files", func() {
+				Eventually(func() int {
+					fileCount := 0
+
+					err := filepath.Walk(targetDirectory, func(candidate string, info os.FileInfo, err error) error {
+						if !info.IsDir() || filepath.Ext(candidate) == ".json" {
+							fileCount += 1
+						}
+						return nil
+					})
+
+					Expect(err).ToNot(HaveOccurred())
+
+					return fileCount
+				}).Should(Equal(4))
+			})
+
+			It("has the expected file names", func() {
+				Eventually(func() []string {
+					var fileNames []string
+
+					err := filepath.Walk(targetDirectory, func(candidate string, info os.FileInfo, err error) error {
+						if !info.IsDir() || filepath.Ext(candidate) == ".json" {
+							fileNames = append(fileNames, candidate)
+						}
+						return nil
+					})
+
+					Expect(err).ToNot(HaveOccurred())
+
+					return fileNames
+				}).Should(
+					SatisfyAll(
+						ContainElement(ContainSubstring("General/home.json")),
+						ContainElement(ContainSubstring("General/random-data.json")),
+						ContainElement(ContainSubstring("Tokyo/nuclear-fallout.json")),
+						ContainElement(ContainSubstring("New York/subway-timings.json")),
+					),
+				)
+			})
 		})
 	})
 })
