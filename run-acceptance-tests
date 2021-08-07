@@ -6,7 +6,7 @@ IFS=$'\n\t'
 main() {
   if [[ $# -eq 0 ]]; then
     up
-    sleep 2
+    wait-for-grafana
     GRAFANA_API_TOKEN=$(auth) ginkgo acceptance-tests && down || >&2 echo "Grafana still running as $(print-container-details). Use 'run down' when you no longer need it."
     exit
   else
@@ -27,11 +27,20 @@ main() {
 up() {
   >&2 echo -n Starting Grafana...
   if [ -f .grafana-container-id ]; then
-    >&2 echo "Error: .grafana-container-id already exists. Grafana may be running?"
+    >&2 echo " Error: .grafana-container-id already exists. Grafana may be running?"
     exit 1
   fi
 
   docker run -d -p 3000:3000 --rm grafana/grafana > .grafana-container-id
+  >&2 echo done.
+}
+
+wait-for-grafana() {
+  >&2 echo -n Waiting for Grafana to become available...
+  until curl --output /dev/null --silent --head --fail http://localhost:3000/api/health; do
+    echo -n .
+    sleep 0.1
+  done
   >&2 echo done.
 }
 
