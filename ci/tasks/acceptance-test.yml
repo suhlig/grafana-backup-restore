@@ -8,7 +8,7 @@ image_resource:
 
 inputs:
   - name: source
-  - name: grafana-sdk-fork
+  - name: grafana-sdk
 
 run:
    path: bash
