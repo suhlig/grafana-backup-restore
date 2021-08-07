@@ -1,3 +1,4 @@
 .envrc
-ci/private-config.yml
+.vscode
 ci/pipeline.yml
+ci/private-config.yml
