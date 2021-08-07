@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -27,8 +28,53 @@ import (
 	grafana "github.com/grafana-tools/sdk"
 )
 
-func BackupDataSources(targetDirectory, apiURL, apiKey string) error {
-	return fmt.Errorf("Error: backing up all datasources not yet implemented")
+func BackupDatasources(targetDirectory, apiURL, apiKey string) error {
+	var (
+		datasources []grafana.Datasource
+		err         error
+	)
+
+	err = os.MkdirAll(targetDirectory, os.FileMode(int(0700)))
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating datasource backup folder %s: %s\n", targetDirectory, err)
+	}
+
+	client, err := grafana.NewClient(apiURL, apiKey, grafana.DefaultHTTPClient)
+
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+
+	if datasources, err = client.GetAllDatasources(ctx); err != nil {
+		return err
+	}
+
+	for _, ds := range datasources {
+		var dsPacked []byte
+		dsPacked, err = json.Marshal(ds)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %s for %s\n", err, ds.Name)
+			continue
+		}
+
+		fileName := fmt.Sprintf("%s.json", path.Join(targetDirectory, ds.Name))
+
+		if Verbose {
+			fmt.Fprintf(os.Stderr, "Writing datasource '%s' to %s\n", ds.Name, fileName)
+		}
+
+		err = ioutil.WriteFile(fileName, dsPacked, os.FileMode(int(0600)))
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func BackupDashboards(targetDirectory, apiURL, apiKey string) error {
@@ -72,10 +118,10 @@ func BackupDashboards(targetDirectory, apiURL, apiKey string) error {
 		err = os.MkdirAll(directory, os.FileMode(int(0700)))
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating backup folder %s: %s\n", directory, err)
+			fmt.Fprintf(os.Stderr, "Error creating dashboard backup folder %s: %s\n", directory, err)
 		}
 
-		fileName := fmt.Sprintf("%s/%s.json", directory, meta.Slug)
+		fileName := fmt.Sprintf("%s.json", path.Join(directory, meta.Slug))
 
 		if Verbose {
 			fmt.Fprintf(os.Stderr, "Writing dashboard '%s' to %s\n", displayPath, fileName)

@@ -17,6 +17,8 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -26,8 +28,83 @@ import (
 	grafana "github.com/grafana-tools/sdk"
 )
 
-func RestoreDataSources(sourceDirectory, apiURL, apiKey string) error {
-	return fmt.Errorf("Error: restoring all datasources not yet implemented")
+func RestoreDatasources(sourceDirectory, apiURL, apiKey string) error {
+	client, err := grafana.NewClient(apiURL, apiKey, grafana.DefaultHTTPClient)
+
+	if err != nil {
+		return err
+	}
+
+	files, err := ioutil.ReadDir(sourceDirectory)
+
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+
+	for _, file := range files {
+		fileName := path.Join(sourceDirectory, file.Name())
+
+		if Verbose {
+			fmt.Fprintf(os.Stderr, "Importing %s ...\n", fileName)
+		}
+
+		dsBytes, err := ioutil.ReadFile(fileName)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Skipping %s because it could not be read: %s\n", fileName, err)
+			continue
+		}
+
+		var ds grafana.Datasource
+		err = json.Unmarshal(dsBytes, &ds)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Skipping %s because it could not be parsed: %s\n", fileName, err)
+			continue
+		}
+
+		var status grafana.StatusMessage
+
+		_, err = client.GetDatasource(ctx, ds.ID)
+
+		if errors.Is(err, grafana.ErrNotFound) {
+			if Verbose {
+				fmt.Fprintf(os.Stderr, "Creating new datasource %s (id=%d)\n", ds.Name, ds.ID)
+			}
+
+			status, err = client.CreateDatasource(ctx, ds)
+
+			if errors.Is(err, grafana.ErrAlreadyExists) {
+				fmt.Fprintf(os.Stderr, "Warning: Skipping %s (read from %s): %s. Consider using --force.\n", ds.Name, fileName, err)
+				continue
+			} else if err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: Skipping %s (read from %s) because it could not be created: %s\n", ds.Name, fileName, err)
+				continue
+			}
+		} else if err == nil { // exists
+			if Verbose {
+				fmt.Fprintf(os.Stderr, "Datasource %s already exists (id=%d); updating...\n", ds.Name, ds.ID)
+			}
+
+			status, err = client.UpdateDatasource(ctx, ds)
+
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: Skipping %s (read from %s) because it could not be updated: %s\n", ds.Name, fileName, err)
+				continue
+			}
+		} else {
+			fmt.Fprintf(os.Stderr, "Warning: Skipping %s because we couldn't check whether it already exists: %s\n", fileName, err)
+			continue
+		}
+
+		if Verbose {
+			fmt.Fprintln(os.Stderr, *status.Message)
+		}
+	}
+
+	return nil
 }
 
 func RestoreDashboards(sourceDirectory, apiURL, apiKey string) error {
@@ -42,6 +119,8 @@ func RestoreDashboards(sourceDirectory, apiURL, apiKey string) error {
 	if err != nil {
 		return err
 	}
+
+	ctx := context.Background()
 
 	err = filepath.Walk(absTarget, func(candidate string, info os.FileInfo, err error) error {
 		if info == nil {
@@ -76,8 +155,6 @@ func RestoreDashboards(sourceDirectory, apiURL, apiKey string) error {
 			fmt.Fprintf(os.Stderr, "Warning: Skipping %s because it could not be read: %s\n", candidate, err)
 			return nil
 		}
-
-		ctx := context.Background()
 
 		folder, err := getOrCreateFolder(ctx, client, folderName)
 

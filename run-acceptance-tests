@@ -1,0 +1,60 @@
+#!/bin/bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+main() {
+  if [[ $# -eq 0 ]]; then
+    up
+    sleep 2
+    GRAFANA_API_TOKEN=$(auth) ginkgo acceptance-tests && down || >&2 echo "Grafana still running as $(print-container-details). Use 'run down' when you no longer need it."
+    exit
+  else
+    case "$1" in
+      "up" )
+        up
+        ;;
+      "down" )
+        down
+        ;;
+      "auth" )
+        auth
+        ;;
+    esac
+  fi
+}
+
+up() {
+  >&2 echo -n Starting Grafana...
+  if [ -f .grafana-container-id ]; then
+    >&2 echo "Error: .grafana-container-id already exists. Grafana may be running?"
+    exit 1
+  fi
+
+  docker run -d -p 3000:3000 --rm grafana/grafana > .grafana-container-id
+  >&2 echo done.
+}
+
+auth() {
+  >&2 echo -n Creating auth token...
+  curl --silent --show-error -X POST -H "Content-Type: application/json" -d "{\"name\":\"Acceptance Test $RANDOM\", \"role\": \"Admin\"}" http://admin:admin@localhost:3000/api/auth/keys | jq --raw-output .key
+  >&2 echo done.
+}
+
+down() {
+  if [ ! -f .grafana-container-id ]; then
+    >&2 echo "Error: .grafana-container-id does not exist; perhaps it's not running?"
+    exit 1
+  fi
+
+  >&2 echo -n Stopping Grafana...
+  trap "rm .grafana-container-id" EXIT
+  docker stop "$(cat .grafana-container-id)" > /dev/null
+  >&2 echo done.
+}
+
+print-container-details(){
+  docker inspect "$(cat .grafana-container-id)" -f '{{.Name}} ({{.Id}})'
+}
+
+main "$@"

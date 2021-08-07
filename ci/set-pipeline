@@ -5,7 +5,7 @@ IFS=$'\n\t'
 
 CONCOURSE_TARGET=uh
 PIPELINE_NAME="grafana-backup-restore"
-SCRIPT_PATH=$(dirname "$(realpath -s $0)")
+SCRIPT_PATH=$(dirname "$(realpath -s "$0")")
 
 main(){
   generate-pipeline

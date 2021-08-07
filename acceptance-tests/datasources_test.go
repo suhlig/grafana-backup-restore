@@ -12,37 +12,37 @@ import (
 	"github.com/suhlig/grafana-backup-restore/cmd"
 )
 
-var _ = Describe("dashboards", func() {
+var _ = Describe("datasources", func() {
 	var (
-		dashboards []map[string]interface{}
+		datasources []map[string]interface{}
 	)
 
 	Context("a fresh Grafana server", func() {
 		BeforeEach(func() {
-			dashboards, err = getDashboards(apiKey)
+			datasources, err = getDatasources(apiKey)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("has no dashboards", func() {
-			Expect(dashboards).To(HaveLen(0))
+			Expect(datasources).To(HaveLen(0))
 		})
 	})
 
-	Context("restoring dashboards", func() {
+	Context("restoring datasources", func() {
 		JustBeforeEach(func() {
-			err = cmd.RestoreDashboards("fixtures/dashboards", "http://localhost:3000", apiKey)
+			err = cmd.RestoreDatasources("fixtures/datasources", "http://localhost:3000", apiKey)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("has four dashboards", func() {
+		It("has two datasources", func() {
 			Eventually(func() int {
-				dashboards, err = getDashboards(apiKey)
+				datasources, err = getDatasources(apiKey)
 				Expect(err).ToNot(HaveOccurred())
-				return len(dashboards)
-			}).Should(Equal(4))
+				return len(datasources)
+			}).Should(Equal(2))
 		})
 
-		Context("backing up dashboards", func() {
+		Context("backing up datasources", func() {
 			var targetDirectory string
 
 			BeforeEach(func() {
@@ -51,17 +51,17 @@ var _ = Describe("dashboards", func() {
 			})
 
 			JustBeforeEach(func() {
-				err = cmd.BackupDashboards(targetDirectory, "http://localhost:3000", apiKey)
+				err = cmd.BackupDatasources(targetDirectory, "http://localhost:3000", apiKey)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("has four dashboard files", func() {
+			It("has two datasource files", func() {
 				Eventually(func() int {
 					count, err := fileCount(targetDirectory)
 					Expect(err).ToNot(HaveOccurred())
 
 					return count
-				}).Should(Equal(4))
+				}).Should(Equal(2))
 			})
 
 			It("has the expected file names", func() {
@@ -71,10 +71,8 @@ var _ = Describe("dashboards", func() {
 					return files
 				}).Should(
 					SatisfyAll(
-						ContainElement(ContainSubstring("General/home.json")),
-						ContainElement(ContainSubstring("General/random-data.json")),
-						ContainElement(ContainSubstring("Tokyo/nuclear-fallout.json")),
-						ContainElement(ContainSubstring("New York/subway-timings.json")),
+						ContainElement(ContainSubstring("TestData DB 0.json")),
+						ContainElement(ContainSubstring("TestData DB 1.json")),
 					),
 				)
 			})
@@ -82,10 +80,10 @@ var _ = Describe("dashboards", func() {
 	})
 })
 
-func getDashboards(apiKey string) ([]map[string]interface{}, error) {
+func getDatasources(apiKey string) ([]map[string]interface{}, error) {
 	client := &http.Client{Timeout: time.Second * 3}
 
-	req, err := http.NewRequest("GET", "http://localhost:3000/api/search?folderIds=0&query=&starred=false", nil)
+	req, err := http.NewRequest("GET", "http://localhost:3000/api/datasources", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -108,13 +106,13 @@ func getDashboards(apiKey string) ([]map[string]interface{}, error) {
 		return nil, fmt.Errorf("Status was not 200, but %d", resp.StatusCode)
 	}
 
-	var dashboards []map[string]interface{}
+	var datasources []map[string]interface{}
 
-	err = json.Unmarshal([]byte(body), &dashboards)
+	err = json.Unmarshal([]byte(body), &datasources)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return dashboards, nil
+	return datasources, nil
 }

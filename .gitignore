@@ -2,3 +2,4 @@
 .vscode
 ci/pipeline.yml
 ci/private-config.yml
+grafana-backup-restore

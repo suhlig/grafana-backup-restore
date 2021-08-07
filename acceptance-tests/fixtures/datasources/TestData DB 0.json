@@ -1,0 +1,15 @@
+{
+  "id": 1,
+  "orgId": 1,
+  "name": "TestData DB 0",
+  "type": "testdata",
+  "access": "proxy",
+  "url": "",
+  "password": "",
+  "user": "",
+  "database": "",
+  "basicAuth": false,
+  "isDefault": true,
+  "jsonData": {},
+  "secureJsonData": null
+}

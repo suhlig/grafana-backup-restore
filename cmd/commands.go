@@ -50,13 +50,13 @@ var (
 		},
 	}
 
-	backupDataSources = &cobra.Command{
+	backupDatasources = &cobra.Command{
 		Use:           "datasources",
 		Short:         "Backup all datasources",
 		SilenceUsage:  true,
 		SilenceErrors: false,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return BackupDataSources(TargetDirectory, ApiURL, ApiKey)
+			return BackupDatasources(TargetDirectory, ApiURL, ApiKey)
 		},
 	}
 
@@ -75,13 +75,13 @@ var (
 		},
 	}
 
-	restoreDataSources = &cobra.Command{
+	restoreDatasources = &cobra.Command{
 		Use:           "datasources",
 		Short:         "Restore all datasources",
 		SilenceUsage:  true,
 		SilenceErrors: false,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return RestoreDataSources(SourceDirectory, ApiURL, ApiKey)
+			return RestoreDatasources(SourceDirectory, ApiURL, ApiKey)
 		},
 	}
 )
@@ -109,14 +109,14 @@ func init() {
 
 	root.AddCommand(backup)
 	backup.AddCommand(backupDashboards)
-	backup.AddCommand(backupDataSources)
+	backup.AddCommand(backupDatasources)
 	backup.PersistentFlags().StringVarP(&ApiURL, "url", "U", "", "Grafana API URL (required)")
 	backup.MarkPersistentFlagRequired("url")
 	backup.PersistentFlags().StringVarP(&TargetDirectory, "target", "T", "", "Target directory to write to. Defaults to the current working directory.")
 
 	root.AddCommand(restore)
 	restore.AddCommand(restoreDashboards)
-	restore.AddCommand(restoreDataSources)
+	restore.AddCommand(restoreDatasources)
 	restore.PersistentFlags().StringVarP(&ApiURL, "url", "U", "", "Grafana API URL (required)")
 	restore.MarkPersistentFlagRequired("url")
 	restore.PersistentFlags().StringVarP(&SourceDirectory, "source", "S", "", "Source directory to read from. Defaults to the current working directory.")
